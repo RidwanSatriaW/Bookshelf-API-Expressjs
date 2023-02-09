@@ -1,16 +1,28 @@
 import Book from '../models/Book.js';
 
 export const getBooks = async (req, res) => {
+  const { name, reading, finished } = req.query;
+  let q;
+  if (!name && !reading && !finished){
+    q = await Book.find({}, '_id name publisher');
+  }
+  else if (name && !reading && !finished){
+    q = await Book.find({ name: name }
+    ).collation(
+        { locale: 'en', strength: 2 }
+    );
+  }
+  else if (!name && reading && !finished){
+    q = await Book.find({ reading: Boolean(Number(reading)) }, '_id name publisher');
+  }
+  else if (!name && !reading && finished){
+    q = await Book.find({ finished: Boolean(Number(finished)) }, '_id name publisher');
+  }
   try {
-    const books = await Book.find();
     res.status(200).json({
       status: 'success',
       data: {
-        books: books.map((books) => ({
-          id: books.id,
-          name: books.name,
-          publisher: books.publisher,
-        })),
+        books: q,
       },
     });
   } catch (error) {
